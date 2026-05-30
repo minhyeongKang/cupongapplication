@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('장바구니')}"></head>
+<body>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<main class="container my-5">
+    <h4 class="fw-bold mb-4"><i class="bi bi-cart3"></i> 장바구니</h4>
+
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+    <div th:if="${cart.cartItems.empty}" class="text-center py-5">
+        <i class="bi bi-cart-x display-4 text-muted"></i>
+        <p class="text-muted mt-3">장바구니가 비어있습니다.</p>
+        <a th:href="@{/products}" class="btn btn-cupong">쇼핑 계속하기</a>
+    </div>
+
+    <div th:unless="${cart.cartItems.empty}">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-3" th:each="item : ${cart.cartItems}">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-3 col-md-2">
+                                <img th:src="${item.product.imageUrl != null ? item.product.imageUrl : 'https://placehold.co/80x80?text=IMG'}"
+                                     class="img-fluid rounded" th:alt="${item.product.name}">
+                            </div>
+                            <div class="col-5 col-md-5">
+                                <a th:href="@{/products/{id}(id=${item.product.id})}"
+                                   class="text-decoration-none text-dark fw-semibold" th:text="${item.product.name}">상품명</a>
+                                <p class="text-cupong fw-bold mb-0 small"
+                                   th:text="'₩' + ${#numbers.formatInteger(item.product.price, 1, 'COMMA')}">₩0</p>
+                            </div>
+                            <div class="col-4 col-md-3">
+                                <form th:action="@{/cart/items/{id}/update(id=${item.id})}" method="post" class="d-flex align-items-center gap-1">
+                                    <input type="number" name="quantity" th:value="${item.quantity}"
+                                           min="1" th:max="${item.product.stock}"
+                                           class="form-control form-control-sm" style="width: 65px;"
+                                           onchange="this.form.submit()">
+                                </form>
+                            </div>
+                            <div class="col-12 col-md-2 text-end mt-2 mt-md-0">
+                                <p class="fw-bold mb-1 small"
+                                   th:text="'₩' + ${#numbers.formatInteger(item.product.price * item.quantity, 1, 'COMMA')}">₩0</p>
+                                <form th:action="@{/cart/items/{id}/delete(id=${item.id})}" method="post">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">주문 요약</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>상품 합계</span>
+                            <span class="fw-bold" th:text="'₩' + ${#numbers.formatInteger(totalPrice, 1, 'COMMA')}">₩0</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>배송비</span>
+                            <span class="text-success">무료</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+                            <span>총 결제금액</span>
+                            <span class="text-cupong" th:text="'₩' + ${#numbers.formatInteger(totalPrice, 1, 'COMMA')}">₩0</span>
+                        </div>
+                        <form th:action="@{/orders}" method="post" id="orderForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">배송 주소</label>
+                                <!-- 우편번호 + 검색 버튼 -->
+                                <div class="input-group mb-2">
+                                    <input type="text" id="cart-zipcode" class="form-control"
+                                           style="max-width: 110px;" placeholder="우편번호" readonly>
+                                    <button type="button" class="btn btn-outline-secondary"
+                                            onclick="openAddressSearch('cart')">
+                                        <i class="bi bi-search"></i> 주소 검색
+                                    </button>
+                                </div>
+                                <!-- 기본 주소 (자동 입력) -->
+                                <input type="text" id="cart-base" class="form-control mb-2"
+                                       placeholder="기본 주소" readonly>
+                                <!-- 상세 주소 -->
+                                <input type="text" id="cart-detail" class="form-control"
+                                       placeholder="상세 주소 (동/호수 등)"
+                                       oninput="combineAddress('cart')">
+                                <!-- 실제 전송 필드 -->
+                                <input type="hidden" name="deliveryAddress" id="cart-address">
+                            </div>
+                            <button type="submit" class="btn btn-cupong w-100 py-2 fw-semibold"
+                                    onclick="return validateAddress('cart')">
+                                주문하기
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+    function openAddressSearch(prefix) {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                document.getElementById(prefix + '-zipcode').value = data.zonecode;
+                document.getElementById(prefix + '-base').value = data.address;
+                combineAddress(prefix);
+                document.getElementById(prefix + '-detail').focus();
+            }
+        }).open();
+    }
+
+    function combineAddress(prefix) {
+        const zipcode = document.getElementById(prefix + '-zipcode').value;
+        const base    = document.getElementById(prefix + '-base').value;
+        const detail  = document.getElementById(prefix + '-detail').value.trim();
+        const full    = zipcode ? `[${zipcode}] ${base}${detail ? ' ' + detail : ''}` : '';
+        document.getElementById(prefix + '-address').value = full;
+    }
+
+    function validateAddress(prefix) {
+        if (!document.getElementById(prefix + '-address').value) {
+            alert('주소를 검색해주세요.');
+            return false;
+        }
+        return true;
+    }
+</script>
+</body>
+</html>

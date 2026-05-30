@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('마이페이지')}"></head>
+<body>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<main class="container my-5">
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="list-group shadow-sm">
+                <a th:href="@{/members/mypage}" class="list-group-item list-group-item-action active bg-cupong border-0">
+                    <i class="bi bi-person-circle"></i> 마이페이지
+                </a>
+                <a th:href="@{/members/edit}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-pencil"></i> 프로필 수정
+                </a>
+                <a th:href="@{/members/password}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-key"></i> 비밀번호 변경
+                </a>
+                <a th:href="@{/orders}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-receipt"></i> 주문 내역
+                </a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-bold py-3">내 정보</div>
+                <div class="card-body p-4">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3 text-muted">이름</dt>
+                        <dd class="col-sm-9" th:text="${member.name}">홍길동</dd>
+                        <dt class="col-sm-3 text-muted">이메일</dt>
+                        <dd class="col-sm-9" th:text="${member.email}">email@example.com</dd>
+                        <dt class="col-sm-3 text-muted">전화번호</dt>
+                        <dd class="col-sm-9" th:text="${member.phone ?: '-'}">-</dd>
+                        <dt class="col-sm-3 text-muted">주소</dt>
+                        <dd class="col-sm-9" th:text="${member.address ?: '-'}">-</dd>
+                        <dt class="col-sm-3 text-muted">가입일</dt>
+                        <dd class="col-sm-9" th:text="${#temporals.format(member.createdAt, 'yyyy-MM-dd')}">2025-01-01</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('로그인')}"></head>
+<body>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<main class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+            <h3 class="fw-bold mb-4 text-center">로그인</h3>
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div th:if="${successMessage}" class="alert alert-success small" th:text="${successMessage}"></div>
+                    <div th:if="${errorMessage}" class="alert alert-danger small" th:text="${errorMessage}"></div>
+                    <form th:action="@{/members/login}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">이메일</label>
+                            <input type="email" name="email" class="form-control" placeholder="example@email.com" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">비밀번호</label>
+                            <input type="password" name="password" class="form-control" placeholder="비밀번호" required>
+                        </div>
+                        <button type="submit" class="btn btn-cupong w-100 py-2 fw-semibold">로그인</button>
+                    </form>
+                </div>
+            </div>
+            <p class="text-center mt-3 text-muted">
+                계정이 없으신가요? <a th:href="@{/members/join}" class="text-cupong fw-semibold">회원가입</a>
+            </p>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

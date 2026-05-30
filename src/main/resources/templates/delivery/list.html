@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('배송 목록')}"></head>
+<body>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<main class="container my-5">
+    <h4 class="fw-bold mb-4"><i class="bi bi-truck"></i> 배송 목록</h4>
+
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <!-- 탭 -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link d-flex align-items-center gap-2"
+               th:href="@{/delivery(tab='shipping')}"
+               th:classappend="${tab == 'shipping'} ? 'active fw-semibold'">
+                <i class="bi bi-truck"></i> 배송 중
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link d-flex align-items-center gap-2"
+               th:href="@{/delivery(tab='delivered')}"
+               th:classappend="${tab == 'delivered'} ? 'active fw-semibold'">
+                <i class="bi bi-house-check"></i> 배송 완료
+            </a>
+        </li>
+    </ul>
+
+    <!-- 빈 목록 -->
+    <div th:if="${orders.content.empty}" class="text-center py-5">
+        <i th:class="${tab == 'shipping'} ? 'bi bi-truck display-4 text-muted' : 'bi bi-house-check display-4 text-success'"></i>
+        <p class="text-muted mt-3"
+           th:text="${tab == 'shipping'} ? '현재 배송 중인 주문이 없습니다.' : '완료된 배송 내역이 없습니다.'"></p>
+    </div>
+
+    <!-- 배송 중 목록 -->
+    <div th:if="${tab == 'shipping' and !orders.content.empty}">
+        <div class="row g-3">
+            <div class="col-md-6" th:each="order : ${orders.content}">
+                <div class="card shadow-sm h-100 border-primary border-opacity-25">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-white">
+                        <span class="fw-bold" th:text="'주문 #' + ${order.id}"></span>
+                        <span class="badge bg-primary">배송 중</span>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row small mb-3">
+                            <dt class="col-4 text-muted">주문자</dt>
+                            <dd class="col-8 fw-semibold" th:text="${order.member.name}"></dd>
+                            <dt class="col-4 text-muted">배송지</dt>
+                            <dd class="col-8" th:text="${order.deliveryAddress}"></dd>
+                            <dt class="col-4 text-muted">운송장</dt>
+                            <dd class="col-8">
+                                <span class="badge bg-secondary" th:text="${order.trackingNumber}"></span>
+                            </dd>
+                            <dt class="col-4 text-muted">상품</dt>
+                            <dd class="col-8">
+                                <span th:text="${order.orderItems[0].product.name}"></span>
+                                <span th:if="${order.orderItems.size() > 1}"
+                                      th:text="' 외 ' + ${order.orderItems.size() - 1} + '건'"
+                                      class="text-muted"></span>
+                            </dd>
+                            <dt class="col-4 text-muted">주문일</dt>
+                            <dd class="col-8 text-muted"
+                                th:text="${#temporals.format(order.createdAt, 'MM-dd HH:mm')}"></dd>
+                        </dl>
+                        <form th:action="@{/delivery/{id}/complete(id=${order.id})}" method="post"
+                              onsubmit="return confirm('배송 완료 처리하시겠습니까?')">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-house-check"></i> 배송 완료
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 배송 완료 목록 -->
+    <div th:if="${tab == 'delivered' and !orders.content.empty}">
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>주문번호</th>
+                            <th>주문자</th>
+                            <th>배송지</th>
+                            <th>운송장 번호</th>
+                            <th>주문일시</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="order : ${orders.content}">
+                            <td class="fw-semibold" th:text="'#' + ${order.id}"></td>
+                            <td th:text="${order.member.name}"></td>
+                            <td class="small text-muted" th:text="${order.deliveryAddress}"></td>
+                            <td>
+                                <span class="badge bg-success" th:text="${order.trackingNumber}"></span>
+                            </td>
+                            <td class="small text-muted"
+                                th:text="${#temporals.format(order.createdAt, 'MM-dd HH:mm')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <nav th:if="${orders.totalPages > 1}" class="mt-4 d-flex justify-content-center">
+        <ul class="pagination">
+            <li class="page-item" th:classappend="${orders.first} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/delivery(tab=${tab}, page=${orders.number - 1})}">이전</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, orders.totalPages - 1)}"
+                th:classappend="${i == orders.number} ? 'active'">
+                <a class="page-link" th:text="${i + 1}"
+                   th:href="@{/delivery(tab=${tab}, page=${i})}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${orders.last} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/delivery(tab=${tab}, page=${orders.number + 1})}">다음</a>
+            </li>
+        </ul>
+    </nav>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head('상품 상세')}"></head>
+<body>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<main class="container my-5">
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <!-- 상품 정보 -->
+    <div class="row mb-5">
+        <div class="col-md-5 mb-4 mb-md-0">
+            <img th:src="${product.imageUrl != null ? product.imageUrl : 'https://placehold.co/500x400?text=No+Image'}"
+                 class="img-fluid rounded shadow-sm w-100" th:alt="${product.name}">
+        </div>
+        <div class="col-md-7">
+            <small class="text-muted" th:text="${product.category?.name}">카테고리</small>
+            <h2 class="fw-bold mt-1 mb-2" th:text="${product.name}">상품명</h2>
+            <h3 class="text-cupong fw-bold mb-3"
+                th:text="'₩' + ${#numbers.formatInteger(product.price, 1, 'COMMA')}">₩0</h3>
+
+            <div class="d-flex align-items-center mb-3">
+                <span class="text-warning me-1">
+                    <i th:each="i : ${#numbers.sequence(1, 5)}"
+                       th:class="${i <= averageRating} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
+                </span>
+                <small class="text-muted" th:text="${#numbers.formatDecimal(averageRating, 1, 1)} + ' / 5.0'">0.0 / 5.0</small>
+            </div>
+
+            <p class="text-muted mb-3" th:text="${product.description}">상품 설명</p>
+            <p class="mb-3">
+                <span class="fw-semibold">재고:</span>
+                <span th:text="${product.stock} + '개'"
+                      th:classappend="${product.stock == 0} ? 'text-danger' : 'text-success'">0개</span>
+            </p>
+
+            <!-- 장바구니 담기 -->
+            <div sec:authorize="isAuthenticated()">
+                <form th:if="${product.stock > 0}" th:action="@{/cart/items}" method="post" class="d-flex gap-2 align-items-center">
+                    <input type="hidden" name="productId" th:value="${product.id}">
+                    <input type="number" name="quantity" value="1" min="1" th:max="${product.stock}"
+                           class="form-control" style="width: 80px;">
+                    <button type="submit" class="btn btn-cupong px-4">
+                        <i class="bi bi-cart-plus"></i> 장바구니 담기
+                    </button>
+                </form>
+                <p th:if="${product.stock == 0}" class="text-danger fw-semibold">품절된 상품입니다.</p>
+            </div>
+            <div sec:authorize="!isAuthenticated()">
+                <a th:href="@{/members/login}" class="btn btn-outline-danger">
+                    <i class="bi bi-box-arrow-in-right"></i> 로그인 후 구매
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- 리뷰 섹션 -->
+    <div class="mt-4">
+        <h5 class="fw-bold mb-3">리뷰 (<span th:text="${reviews.totalElements}">0</span>)</h5>
+
+        <!-- 리뷰 작성 폼 -->
+        <div sec:authorize="isAuthenticated()" class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-3">리뷰 작성</h6>
+                <div th:if="${errorMessage}" class="alert alert-danger small" th:text="${errorMessage}"></div>
+                <form th:action="@{/products/{id}/reviews(id=${product.id})}" method="post">
+                    <div class="mb-2">
+                        <label class="form-label">평점</label>
+                        <select name="rating" class="form-select w-auto">
+                            <option value="5">⭐⭐⭐⭐⭐ (5점)</option>
+                            <option value="4">⭐⭐⭐⭐ (4점)</option>
+                            <option value="3">⭐⭐⭐ (3점)</option>
+                            <option value="2">⭐⭐ (2점)</option>
+                            <option value="1">⭐ (1점)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <textarea name="content" class="form-control" rows="3"
+                                  placeholder="상품에 대한 솔직한 리뷰를 남겨주세요." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-cupong btn-sm">등록</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 리뷰 목록 -->
+        <div th:each="review : ${reviews.content}" class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-1">
+                    <div>
+                        <span class="fw-semibold me-2" th:text="${review.member.name}">홍길동</span>
+                        <span class="text-warning small">
+                            <span th:each="i : ${#numbers.sequence(1, review.rating)}">⭐</span>
+                        </span>
+                    </div>
+                    <small class="text-muted"
+                           th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd')}">2025-01-01</small>
+                </div>
+                <p class="mb-0" th:text="${review.content}">리뷰 내용</p>
+            </div>
+        </div>
+        <p th:if="${reviews.content.empty}" class="text-muted">아직 리뷰가 없습니다. 첫 리뷰를 남겨보세요!</p>
+
+        <!-- 리뷰 페이지네이션 -->
+        <nav th:if="${reviews.totalPages > 1}" class="mt-3 d-flex justify-content-center">
+            <ul class="pagination pagination-sm">
+                <li class="page-item" th:classappend="${reviews.first} ? 'disabled'">
+                    <a class="page-link" th:href="@{/products/{id}(id=${product.id}, page=${reviews.number - 1})}">이전</a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, reviews.totalPages - 1)}"
+                    th:classappend="${i == reviews.number} ? 'active'">
+                    <a class="page-link" th:text="${i + 1}"
+                       th:href="@{/products/{id}(id=${product.id}, page=${i})}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${reviews.last} ? 'disabled'">
+                    <a class="page-link" th:href="@{/products/{id}(id=${product.id}, page=${reviews.number + 1})}">다음</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
