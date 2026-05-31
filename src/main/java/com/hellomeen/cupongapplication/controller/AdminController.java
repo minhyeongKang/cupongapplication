@@ -115,6 +115,25 @@ public class AdminController {
         return "redirect:/admin/categories";
     }
 
+    @PostMapping("/categories/{id}/rename")
+    public String renameCategory(@PathVariable Long id, @RequestParam String name,
+                                 RedirectAttributes redirectAttributes) {
+        categoryService.rename(id, name);
+        redirectAttributes.addFlashAttribute("successMessage", "카테고리 이름을 수정했습니다.");
+        return "redirect:/admin/categories";
+    }
+
+    @PostMapping("/categories/{id}/delete")
+    public String deleteCategory(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            categoryService.delete(id);
+            redirectAttributes.addFlashAttribute("successMessage", "카테고리를 삭제했습니다.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/admin/categories";
+    }
+
     // 주문 관리
 
     @GetMapping("/orders")

@@ -28,4 +28,8 @@ public class Category {
     @OneToMany(mappedBy = "parent")
     @Builder.Default
     private List<Category> children = new ArrayList<>();
+
+    public void rename(String name) {
+        this.name = name;
+    }
 }
