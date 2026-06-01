@@ -138,8 +138,11 @@ public class AdminController {
 
     @GetMapping("/orders")
     public String orderList(@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+                            @RequestParam(required = false) OrderStatus status,
                             Model model) {
-        model.addAttribute("orders", orderService.findAll(pageable));
+        model.addAttribute("orders", orderService.findAllFiltered(status, pageable));
+        model.addAttribute("currentStatus", status);
+        model.addAttribute("statuses", OrderStatus.values());
         return "admin/orders/list";
     }
 

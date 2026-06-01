@@ -75,6 +75,13 @@ public class OrderService {
         return orderRepository.findAll(pageable);
     }
 
+    public Page<Order> findAllFiltered(OrderStatus status, Pageable pageable) {
+        if (status == null) {
+            return orderRepository.findAll(pageable);
+        }
+        return orderRepository.findByStatus(status, pageable);
+    }
+
     public Page<Order> findShippingOrders(Pageable pageable) {
         return orderRepository.findByStatus(OrderStatus.SHIPPING, pageable);
     }

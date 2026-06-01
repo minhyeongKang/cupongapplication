@@ -9,6 +9,34 @@
 
     <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
 
+    <!-- 상태 필터 -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a th:href="@{/admin/orders}"
+           th:classappend="${currentStatus == null} ? 'active'" class="btn btn-sm btn-outline-secondary">
+            전체
+        </a>
+        <a th:href="@{/admin/orders(status='PENDING')}"
+           th:classappend="${currentStatus?.name() == 'PENDING'} ? 'active'" class="btn btn-sm btn-outline-warning">
+            주문 접수
+        </a>
+        <a th:href="@{/admin/orders(status='PAID')}"
+           th:classappend="${currentStatus?.name() == 'PAID'} ? 'active'" class="btn btn-sm btn-outline-success">
+            주문 승인
+        </a>
+        <a th:href="@{/admin/orders(status='SHIPPING')}"
+           th:classappend="${currentStatus?.name() == 'SHIPPING'} ? 'active'" class="btn btn-sm btn-outline-primary">
+            배송 중
+        </a>
+        <a th:href="@{/admin/orders(status='DELIVERED')}"
+           th:classappend="${currentStatus?.name() == 'DELIVERED'} ? 'active'" class="btn btn-sm btn-outline-info">
+            배송 완료
+        </a>
+        <a th:href="@{/admin/orders(status='CANCELLED')}"
+           th:classappend="${currentStatus?.name() == 'CANCELLED'} ? 'active'" class="btn btn-sm btn-outline-dark">
+            취소
+        </a>
+    </div>
+
     <div class="card shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
@@ -55,14 +83,14 @@
     <nav th:if="${orders.totalPages > 1}" class="mt-4 d-flex justify-content-center">
         <ul class="pagination">
             <li class="page-item" th:classappend="${orders.first} ? 'disabled'">
-                <a class="page-link" th:href="@{/admin/orders(page=${orders.number - 1})}">이전</a>
+                <a class="page-link" th:href="@{/admin/orders(page=${orders.number - 1}, status=${currentStatus})}">이전</a>
             </li>
             <li class="page-item" th:each="i : ${#numbers.sequence(0, orders.totalPages - 1)}"
                 th:classappend="${i == orders.number} ? 'active'">
-                <a class="page-link" th:text="${i + 1}" th:href="@{/admin/orders(page=${i})}">1</a>
+                <a class="page-link" th:text="${i + 1}" th:href="@{/admin/orders(page=${i}, status=${currentStatus})}">1</a>
             </li>
             <li class="page-item" th:classappend="${orders.last} ? 'disabled'">
-                <a class="page-link" th:href="@{/admin/orders(page=${orders.number + 1})}">다음</a>
+                <a class="page-link" th:href="@{/admin/orders(page=${orders.number + 1}, status=${currentStatus})}">다음</a>
             </li>
         </ul>
     </nav>
