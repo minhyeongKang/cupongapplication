@@ -45,7 +45,8 @@ public class ProductService {
     }
 
     public Page<Product> search(String keyword, Pageable pageable) {
-        return productRepository.findByNameContaining(keyword, pageable);
+        return productRepository.findByNameContainingOrDescriptionContaining(
+                keyword, keyword, pageable);
     }
 
     public Page<Product> findAll(Pageable pageable) {
